@@ -1,0 +1,29 @@
+
+<body style="background-color:black">
+
+  <div class="game" style="width:250px; height:500px; margin:auto"></div>
+
+
+  <!-- The stylesheet should go in the <head>, or be included in your CSS -->
+  <link rel="shortcut icon" href="assets/images/favicon.png">
+
+  <link href='http://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="src/blockrain.css">
+
+
+  <!-- jQuery and Blockrain.js -->
+  <script src="assets/js/jquery-1.11.1.min.js"></script>
+  <script src="src/blockrain.jquery.libs.js"></script>
+  <script src="src/blockrain.jquery.src.js"></script>
+  <script src="src/blockrain.jquery.themes.js"></script>
+  <script>
+      $('.game').blockrain({
+        speed: 100
+
+      });
+  </script>
+
+
+
+</body>
