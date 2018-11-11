@@ -7,8 +7,8 @@ Development contributions during the hackathon
 - Frontend: /blockrain2/index.html
 - Backend: /simple-express-server/server.js
 
-On saturday a sidechain was deployed in the WILD.
-A dapp went LIVE on
+On saturday a sidechain was deployed on AWS.
+The dapp went LIVE on Sunday
 http://eossf.s3-website-us-west-1.amazonaws.com/
 and we brought real users to it with Facebook marketing
 
