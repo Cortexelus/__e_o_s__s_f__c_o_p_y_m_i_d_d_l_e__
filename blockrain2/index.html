@@ -1,0 +1,514 @@
+<head>
+<link rel="shortcut icon" href="assets/images/favicon.png">
+<link href='http://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="src/blockrain.css">
+
+<style>
+#newhighscore{
+  display: none;
+}#newusercreated{
+  display: none;
+}
+#errorpostingscore{
+  display: none;
+}
+#newuser{
+  display: none;
+}
+#waitmenu{
+  display: none;
+}
+#newuser-error{
+  color: red;
+}
+.blockrain-window{
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  transform: translateY(-50%);
+}
+#gameover-leaderboard{
+  display: none;
+}
+.leaderboard-table{
+  margin: 10px auto 40px auto;
+}
+.leaderboard-table td{
+  padding: 5px;
+
+}
+.leaderboard-table td:nth-child(1){
+  color: #0cff00;
+}
+.leaderboard-table td:nth-child(2){
+  color: #fff;
+    text-align: right;
+
+}
+.leaderboard-table td:nth-child(3), .leaderboard-table th:nth-child(3){
+  color: #fff5;
+  text-align: right;
+}
+.brinput{
+  border: 2px dashed #00ff37;
+  padding: 4px;
+  background-color: #000;
+  color: #00ff37;
+  width: 230px;
+  margin-bottom: 30px;
+}
+.widebtn{
+  width: 170px;
+}
+</style>
+
+</head>
+
+
+<body style="background-color:black">
+
+<div class="game" style="width:250px; height:500px; margin:auto"></div>
+
+<div id="waitmenu" class="blockrain-window">
+    <div class="blockrain-game-over-msg" id="waitmenu-text"></div>
+</div>
+
+<div id="newhighscore" class="blockrain-window">
+  <div class="blockrain-game-over-msg" id="newhighscore-text">New High Score!</div>
+  <a class="blockrain-btn widebtn" id="post-score">Add to Leaderboard</a></div>
+</div>
+
+<div id="errorpostingscore" class="blockrain-window">
+  <div class="blockrain-game-over-msg" id="newhighscore-text">Error Posting Score</div>
+  <a class="blockrain-btn widebtn" id="post-score2">Try Again</a>
+  <a class="blockrain-btn widebtn" id="playagain2">Play</a>
+</div>
+
+<div id="newuser" class="blockrain-window">
+    <div class="blockrain-game-over-msg">New High Score!</div>
+        <div id="newuser-error"></div>
+
+  <input class="brinput" pattern="[a-z0-5]{0,11}" placeholder="name" id="newusername"/>
+  <a class="blockrain-btn widebtn" id="newuser-open-leaderboard">Add to Leaderboard</a></div>
+</div>
+
+<div id="newusercreated" class="blockrain-window">
+  <div class="blockrain-game-over-msg">Success, account created!</div>
+  <div class="blockrain-game-over-msg">Write down your private key!</div>
+  <div class="blockrain-game-over-msg">Name: user</div>
+  <input class="brinput" value="5KEHXJc4NTSR39tnFPm9X5Mn2yjU1kxrLV6ALLD4zfEyaJEEE9W">
+
+  
+</div>
+
+<div id="gameover-leaderboard" class="blockrain-window">
+  <div class="blockrain-game-over-msg">Leaderboard</div>
+  <table class="leaderboard-table" id="leaderboard">
+
+  </table>
+  <a class="blockrain-btn " id="playagain">Play</a></div>
+
+</div>
+
+</body>
+
+
+
+<!-- jQuery and Blockrain.js -->
+<script src="assets/js/jquery-1.11.1.min.js"></script>
+<script src="src/blockrain.jquery.libs.js"></script>
+<script src="src/blockrain.jquery.src.js"></script>
+<script src="src/blockrain.jquery.themes.js"></script>
+
+
+
+<script>
+// crummy jquery code for dom manipulation
+let new_score = null;
+let leaderboard = [];
+let balances = {};
+  
+// hide all the menus
+function hidemenus(){
+  $('#newhighscore').hide()
+  $('#newuser').hide()
+  $('#newusercreated').hide()
+  $('#errorpostingscore').hide()
+  $('#gameover-leaderboard').hide()
+  $('.blockrain-game-over').hide();
+      $('#waitmenu').hide()
+      $('#newuser-error').text("");
+
+}
+// show a generic waiting menu with a message
+function showwaitmenu(text){
+  hidemenus();
+  $("#waitmenu").show().detach().appendTo($('.blockrain-game-over-holder')[0])
+  $("#waitmenu-text").text(text)
+}
+
+// initializes the game
+$('.game').blockrain({
+  speed: 20,
+  gameOverText: 'Game Over',
+  restartButtonText: 'Play Again',
+  scoreText: 'Score',  
+  onStart: function(){
+    new_score = null;
+    // send 1 coin to top leader upon game start
+    if(getWallet().name && leaderboard.length>0){
+      send(leaderboard[0].user)
+    }
+  },
+  onRestart: function(){
+    new_score = null;
+    // send 1 coin to top leader upon game restart
+    if(getWallet().name && leaderboard.length>0){
+      send(leaderboard[0].user)
+    }
+  },
+  onGameOver: function(score){
+    new_score = score;
+    console.log("NEW HIGH SCORE?", score)
+    hidemenus();
+    let wallet = getWallet();
+    if(!wallet.pubkey || !wallet.privkey || !wallet.name){
+      // no login 
+      // create a new user first
+      $('#newuser').show().detach().appendTo($('.blockrain-game-over-holder')[0])
+    }else{
+      if(newhighestscore(new_score, wallet.name, leaderboard)){
+        // add the score to the leaderboard
+        $("#newhighscore").show().detach().appendTo($('.blockrain-game-over-holder')[0])
+      }else{
+        // show the leaderboard
+        open_leaderboard();
+      }
+    }
+
+  }
+});
+
+// opens the leaerboard; the wallet exists
+$("#post-score").click(function(){
+  posting_score(new_score);
+});
+$("#post-score2").click(function(){
+  posting_score(new_score);
+});
+
+// posts the score
+function posting_score(new_score){
+  showwaitmenu("Adding score to leaderboard..");
+  let success = function(result){
+    open_leaderboard();
+  }
+  let error = function(error){
+    // try posting it again
+    hidemenus();
+    $("#errorpostingscore").show().detach().appendTo($('.blockrain-game-over-holder')[0])
+  }
+  postToLeaderboard(new_score, success, error);
+}
+
+function open_leaderboard(){
+   hidemenus();
+   $('#gameover-leaderboard').show().detach().appendTo($('.blockrain-game-over-holder')[0])
+};
+
+$("#newusername").keyup(function(){
+  $("#newusername").val($("#newusername").val().replace(/[^a-z1-5]/gi,''));
+  $("#newusername").val($("#newusername").val().substring(0,10).toLowerCase());
+})
+
+// creates a new user
+$("#newuser-open-leaderboard").click(function(){
+
+  let newusername = $("#newusername").val();
+  newusername = newusername.replace(/[^a-z1-5]/gi,'').substring(0,10).toLowerCase();
+  if(!newusername) return;
+
+  // create new user
+   hidemenus();
+   showwaitmenu("Creating new user..");
+
+
+   createUser(newusername,function(success, result){
+    if(success){
+      posting_score(new_score);
+      return;
+    }else{
+      console.error("error", result);
+      if(typeof result.error.error.error.name!=='undefined'){
+        if(result.error.error.error.name=="account_name_exists_exception"){
+          hidemenus();
+          $('#newuser').show().detach().appendTo($('.blockrain-game-over-holder')[0])
+          $('#newuser-error').text("Choose a different name")
+        }else if(result.error.error.error.name=="action_validate_exception"){
+          hidemenus();
+          $('#newuser').show().detach().appendTo($('.blockrain-game-over-holder')[0])
+          $('#newuser-error').text("Please enter a name")
+        }else{
+          hidemenus();
+          $('#newuser').show().detach().appendTo($('.blockrain-game-over-holder')[0])
+          $('#newuser-error').text("Sorry there was an error")
+        }
+      }
+    }
+   });
+
+});
+
+// restart the game
+$("#playagain").click(function(){
+  hidemenus();
+    $('.game').blockrain('restart');
+});
+$("#playagain2").click(function(){
+  hidemenus();
+    $('.game').blockrain('restart');
+});
+</script>
+
+
+
+
+<script src="eosjs-keygen.js"></script>
+
+
+
+
+
+<script src='eosjs/eosjs-api-debug.js'></script>
+<script src='eosjs/eosjs-jsonrpc-debug.js'></script>
+<script src='eosjs/eosjs-rpcerror-debug.js'></script>
+<script src='eosjs/eosjs-jssig-debug.js'></script>
+<script>
+let pre = document.getElementsByTagName('pre')[0];
+
+const rpc = new eosjs_jsonrpc.default('http://34.220.2.79:7777');
+
+
+/// transaction template function 
+function transaction(tr, success, error){
+  let wallet = getWallet();
+  if(!wallet.privkey){
+    console.error("No privkey");
+    error({"error": "no privkey"});
+    return;
+  }
+  const signatureProvider = new eosjs_jssig.default([wallet.privkey]);
+  const api = new eosjs_api.default({ rpc, signatureProvider });
+
+    (async () => {
+      try{
+        const result = await api.transact(tr, {
+          blocksBehind: 3,
+          expireSeconds: 30,
+        });
+        console.log(result);
+        success(result);
+      } catch (e) {
+        console.log('\nCaught exception: ' + e);
+        /*if (e instanceof RpcError){
+          let error_string = JSON.stringify(e.json, null, 2);
+          console.log(error_string);
+          error({"error": e.json});
+        }else{*/
+            error({"error": e.toString()});
+       // }
+      }
+  })();
+}
+
+function send(receiver){
+    let wallet = getWallet();
+    if(!wallet.name || !wallet.privkey){
+      console.error("can't post to leaderboard, missing wallet data", wallet);
+      return;
+    }
+    let tr = {
+        actions: [{
+            account: 'eosio.token',
+            name: 'transfer',
+            authorization: [{
+              actor: wallet.name,
+              permission: 'active',
+            }],
+            data: {
+                from: wallet.name,
+                to: receiver,
+                quantity: '1.0000 CM',
+                memo: '',
+            },
+        }]
+    };
+    let success = (result) => console.log(result);
+    let error = (result) => console.error(result);
+    transaction(tr,success, error);
+}
+
+//send();
+
+
+function postData(url = ``, data = {}) {
+  // Default options are marked with *
+    return fetch(url, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        mode: "cors", // no-cors, cors, *same-origin
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin", // include, *same-origin, omit
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+        redirect: "follow", // manual, *follow, error
+        referrer: "no-referrer", // no-referrer, *client
+        body: JSON.stringify(data), // body data type must match "Content-Type" header
+    })
+    .then(response => response.json()); // parses response to JSON
+}
+
+function createUser(name, callback){
+  // create pub/private pair 
+  kos.Keygen.generateMasterKeys().then(keys => {
+  // create blockchain account called 'myaccount'
+  console.log(keys)
+  let pubkey = keys.publicKeys.active;
+  let privkey = keys.privateKeys.active;
+
+  // post it
+  postData('http://localhost:6069/signup', {pubkey: pubkey, user: name})
+    .then(data => {
+      console.log(data)
+      if(typeof data.error!=='undefined'){
+        console.error(data)
+        callback(false, {"error": data})
+      }else{
+        // store it in localStorage
+        localStorage.setItem('pubkey', pubkey);
+        localStorage.setItem('privkey', privkey);
+        localStorage.setItem('name', name);
+        callback(true, {"pubkey": pubkey, "privkey": privkey, "name": name});
+      }
+    }) // JSON-string from `response.json()` call
+    .catch(error => {
+      console.error(error)
+      callback(false, {"error": error})
+    });
+  })
+}
+
+
+function getWallet(){
+  let pubkey = localStorage.getItem('pubkey');
+  let privkey = localStorage.getItem('privkey');
+  let name = localStorage.getItem('name');
+  return {"pubkey": pubkey, "privkey": privkey, "name": name}
+}
+
+// Post the score to the leaderboard
+function postToLeaderboard(score_value, success, error){
+  let wallet = getWallet();
+  if(!wallet.name || !wallet.privkey){
+    console.error("can't post to leaderboard, missing wallet data", wallet);
+    return;
+  }
+  let tr = {
+    actions: [{
+        account: 'leaderboard',
+        name: 'newscore',
+        authorization: [{
+          actor: wallet.name,
+          permission: 'active',
+        }],
+        data: {
+            user: wallet.name,
+            newscore: score_value
+        },
+    }]
+  };
+  transaction(tr,success, error);
+}
+
+// find out if this score is a new highest score
+function newhighestscore(score, user, leaderboard){
+  for(let i=0;i<leaderboard.length;i++){
+    if(leaderboard[i].user==user){
+      if(leaderboard[i].score_value<score) return true;
+    }
+  }
+  return false;
+}
+
+
+function longpollBalances(){
+  if(leaderboard.length == 0) return;
+  for(let i=0;i<leaderboard.length && i<10;i++){
+    let user = leaderboard[i].user;
+    (async () => {
+        try{
+          console.log(user)
+          const result = await rpc.get_currency_balance("eosio.token", user, "CM");
+          balances[user] = result;
+        } catch (e) {
+          console.log('\nCaught exception: ' + e);
+        }
+    })();
+  }
+
+}
+
+function longpollLeaderboard(){
+  (async () => {
+      try{
+        const result = await rpc.get_table_rows({code: "leaderboard", limit: 400, table: "scores", scope: "leaderboard"})
+        updateLeaderboard(result.rows);
+      } catch (e) {
+        console.log('\nCaught exception: ' + e);
+
+      }
+  })();
+}
+// polls the leaderboard every 0.5 seconds
+function updateLeaderboard(scores){
+  // read it from the blockchain
+
+  // sort by number
+  function compare(a,b) {
+    if (a.score_value < b.score_value)
+      return 1;
+    if (a.score_value > b.score_value)
+      return -1;
+    return 0;
+  }
+  scores.sort(compare);
+  leaderboard = scores;  
+
+
+
+  $("#leaderboard").empty();
+  $("#leaderboard").append("<tr><th></th><th>Score</th><th>Coin</th></tr>");
+
+  let i =0;
+  for(;i<10 && i<scores.length;i++){
+    let data = scores[i];
+    let balance = balances[data.user] || "";
+    //balance = parseFloat(balance).toFixed(1);
+    balance = parseInt(balance);
+    $("#leaderboard").append("<tr><td>" + data.user + "</td><td>" + data.score_value + "</td><td>"+ balance+"</td></tr>");
+  };
+  if(scores.length<10){
+    // fill out the rest with --
+    for(;i<10;i++){
+      $("#leaderboard").append("<tr><td>--</td><td>--</td><td>--</td></tr>");
+    }
+  }
+}
+setInterval(longpollLeaderboard, 500);
+setInterval(longpollBalances,2000);
+
+
+
+</script>
