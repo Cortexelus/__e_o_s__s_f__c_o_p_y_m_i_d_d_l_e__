@@ -1,13 +1,19 @@
 # Tetreos: There can be only one
-The development contributions this weekend were:
 
 ```
-# Smart contract
-./leaderboard-contract/leaderboard.cpp
-  
-# Frontend
-./blockrain2/index.html
+Development contributions during the hackathon
 
-# Backend
-./simple-express-server/server.js
+- Smart contract: /leaderboard-contract/leaderboard.cpp
+- Frontend: /blockrain2/index.html
+- Backend: /simple-express-server/server.js
+
+On saturday a sidechain was deployed in the WILD.
+A dapp went LIVE on
+http://eossf.s3-website-us-west-1.amazonaws.com/
+and we brought real users to it with Facebook marketing
+
+# Open source libraries used:
+- Blockrain tetris clone
+- Simple express server
 ```
+
