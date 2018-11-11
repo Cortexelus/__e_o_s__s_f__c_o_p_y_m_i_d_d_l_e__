@@ -1,0 +1,53 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Sun Nov 11 06:40:56 2018",
+    "version": "eosio::abi/1.0",
+    "structs": [
+        {
+            "name": "newscore",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "newscore",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "score",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "score_value",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "newscore",
+            "type": "newscore",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "scores",
+            "type": "score",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "abi_extensions": []
+}

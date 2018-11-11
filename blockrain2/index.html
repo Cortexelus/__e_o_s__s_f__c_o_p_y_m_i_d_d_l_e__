@@ -379,7 +379,7 @@ function createUser(name, callback){
   let privkey = keys.privateKeys.active;
 
   // post it
-  postData('http://localhost:6069/signup', {pubkey: pubkey, user: name})
+  postData('http://34.210.246.214:6069/signup', {pubkey: pubkey, user: name})
     .then(data => {
       console.log(data)
       if(typeof data.error!=='undefined'){
@@ -449,7 +449,7 @@ function longpollBalances(){
     let user = leaderboard[i].user;
     (async () => {
         try{
-          console.log(user)
+          //console.log(user)
           const result = await rpc.get_currency_balance("eosio.token", user, "CM");
           balances[user] = result;
         } catch (e) {
